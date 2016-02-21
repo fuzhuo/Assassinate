@@ -1,0 +1,48 @@
+#for cocos2d
+cocos2d/*
+bin/*
+
+# linux
+proj.linux/obj/*
+proj.linux/bin/*
+
+# android
+proj.android/bin/*
+proj.android/libs/*
+proj.android/gen/*
+proj.android/obj/*
+proj.android/assets/*
+proj.android/local.properties
+
+# for xcode
+*.pbxuser
+*.mode1
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcclassmodel/
+
+# files created by Xcode 4
+xcuserdata/
+xcshareddata/
+
+# build products
+*.build/
+build/
+DerivedData/
+
+# Misc
+.svn
+.DS_Store
+.*.swp
+.swp
+
+#for windows
+proj.win32/Debug.win32/
+
+#for Gtags
+G*
+cscope.files
+
+#for database
+Resources/zhouyu.db

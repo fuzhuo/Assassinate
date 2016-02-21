@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="20" height="15" tilewidth="64" tileheight="64" nextobjectid="1">
+ <tileset firstgid="1" name="Map" tilewidth="64" tileheight="64" tilecount="28" columns="7">
+  <image source="Map.png" width="448" height="256"/>
+  <tile id="0">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="1">
+   <objectgroup draworder="index"/>
+  </tile>
+  <tile id="2">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="21.1592" width="13.7913" height="1.70029"/>
+   </objectgroup>
+  </tile>
+  <tile id="5">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="16"/>
+   </objectgroup>
+  </tile>
+  <tile id="6">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="14"/>
+   </objectgroup>
+  </tile>
+  <tile id="7">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="8">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="5.63031"/>
+   </objectgroup>
+  </tile>
+  <tile id="9">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="6.37028"/>
+   </objectgroup>
+  </tile>
+  <tile id="10">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="6.33606"/>
+   </objectgroup>
+  </tile>
+  <tile id="11">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="6.5"/>
+   </objectgroup>
+  </tile>
+  <tile id="12">
+   <objectgroup draworder="index"/>
+  </tile>
+  <tile id="13">
+   <objectgroup draworder="index"/>
+  </tile>
+  <tile id="14">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="15">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="6.5"/>
+   </objectgroup>
+  </tile>
+  <tile id="16">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="15" width="64" height="49"/>
+   </objectgroup>
+  </tile>
+  <tile id="17">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="19">
+   <objectgroup draworder="index"/>
+  </tile>
+  <tile id="20">
+   <objectgroup draworder="index"/>
+  </tile>
+  <tile id="21">
+   <objectgroup draworder="index">
+    <object id="0" x="18" y="0" width="14" height="10"/>
+   </objectgroup>
+  </tile>
+  <tile id="22">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="31" height="10"/>
+   </objectgroup>
+  </tile>
+  <tile id="23">
+   <objectgroup draworder="index">
+    <object id="0" x="0" y="0" width="14" height="10"/>
+   </objectgroup>
+  </tile>
+  <tile id="26">
+   <objectgroup draworder="index"/>
+  </tile>
+  <tile id="27">
+   <objectgroup draworder="index"/>
+  </tile>
+ </tileset>
+ <layer name="StaticLayer" width="20" height="15">
+  <data encoding="base64" compression="zlib">
+   eJwTZmBgEEbCHGh8YuXI0UOOefxAzAXE3GiYh0zzhKjsPkYqu48W8TEQ7sMXzsS6j59AOPOgiaHrIccfnEToZQNidiS+ANQ8dL0CRLqFF4j5yHAfzO88SGEEokWAWBSLeaS6D+YGaSCWIdJ9gngwPxYxISjNgUMPAEwOE5I=
+  </data>
+ </layer>
+</map>
