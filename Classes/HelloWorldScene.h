@@ -22,6 +22,22 @@ public:
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
     ~HelloWorld();
+public:
+    //input
+    virtual void onEnterTransitionDidFinish();
+    virtual void onExitTransitionDidStart();
+    //touch
+    virtual void onTouchesBegan(const std::vector<Touch*>& touches, Event *event);
+    virtual void onTouchesMoved(const std::vector<Touch*>& touches, Event *event);
+    virtual void onTouchesEnded(const std::vector<Touch*>& touches, Event *event);
+    virtual void onTouchesCancelled(const std::vector<Touch*>& touches, Event *event);
+    
+    //keyboard
+    virtual void onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_event);
+    virtual void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_event);
+    EventListenerTouchAllAtOnce *listener;
+    EventListenerKeyboard *keyListener;
+    
 private:
     Size winSize;
     PhysicsWorld *_world;
@@ -34,6 +50,12 @@ private:
     std::vector<Rect> _physicBlock;
     Size _mapSize;
     Size _tileSize;
+    
+    void initHero();
+    Sprite *_hero;
+    bool _showDebugDraw;
+    void setViewpointCenter(Point position);
+    void update(float dt);
 };
 
 #endif // __HELLOWORLD_SCENE_H__

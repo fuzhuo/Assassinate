@@ -17,7 +17,8 @@ Scene* HelloWorld::createScene()
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
     layer->_world = scene->getPhysicsWorld();
-    layer->_world->setGravity(Vec2(0.0, -200.0));
+    layer->_world->setGravity(Vec2(0.0, -980));
+    layer->_showDebugDraw=true;
 
     // add layer as a child to scene
     scene->addChild(layer);
@@ -39,9 +40,14 @@ bool HelloWorld::init()
     
     _ratio = Director::getInstance()->getContentScaleFactor();
     initMap();
-    
+    initHero();
 //    createB2StaticRect(Point(20,15), Size(40,30), kBoxGround);
     return true;
+}
+
+HelloWorld::~HelloWorld()
+{
+    _map->release();
 }
 
 void HelloWorld::initMap()
@@ -53,7 +59,7 @@ void HelloWorld::initMap()
     _tileSize=_map->getTileSize();
     _staticLayer = _map->getLayer(STATIC_LAYER);
     
-    //xml
+    //xml to get collision data
     tinyxml2::XMLDocument *pDoc = new tinyxml2::XMLDocument();
     assert(pDoc!=nullptr);
     pDoc->LoadFile(path.c_str());
@@ -86,7 +92,11 @@ void HelloWorld::initMap()
         err = tile_obj->QueryFloatAttribute("width", &width);
         err = tile_obj->QueryFloatAttribute("height", &height);
         log("ele gid[%d] id[%d],[%f, %f, %f, %f]", gid, id, x, y, width, height);
-        _physicBlock[gid]=Rect((x+width/2)/_ratio,(_tileSize.height-y-height/2)/_ratio,width/_ratio,height/_ratio);
+        //because center position is not 0,0, it is 0.5, 0.5
+        _physicBlock[gid]=Rect(x/_ratio,(_tileSize.height-y-height/2)/_ratio,width/_ratio,height/_ratio);
+        log("ele gid[%d] id[%d],[%f, %f, %f, %f]", gid, id,
+            _physicBlock[gid].origin.x, _physicBlock[gid].origin.y,
+            _physicBlock[gid].size.width, _physicBlock[gid].size.height);
         tile=tile->NextSiblingElement();
     }
     assert(pDoc!=nullptr);
@@ -97,16 +107,39 @@ void HelloWorld::initMap()
     log("Tile size[%f,%f]", size.width, size.height);
     for (int i=0; i<size.width; i++) {
         for (int j=0; j<size.height; j++) {
-            auto gid = _staticLayer->getTileGIDAt(Vec2(i,j))-1;
+            auto gid = _staticLayer->getTileGIDAt(Vec2(i,j))-1;//why gid is not correct here
+            auto p = _map->getPropertiesForGID(gid);
+            bool isSensor=false;
+            if (!p.isNull()) {
+                auto valuemap = p.asValueMap();
+                if (valuemap.size()!=0) {
+                    auto config = valuemap["isSensor"].asString();
+                    log("gid[%d], isSensor[%s]", gid, config.c_str());
+                    if (config == "true") isSensor=true;
+                }
+            }
             Rect rect = _physicBlock[gid];
             if (rect.origin==Point::ZERO && rect.size.width==0 && rect.size.height==0) {log("skip (%d,%d)", i, j); continue;}
-            log("at (%d,%d) - gid[%d] - rect[%f,%f,%f,%f]", i, j, gid, rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+            log("at (%d,%d) - gid[%d] isSensor[%d] - rect[%f,%f,%f,%f]", i, j, gid, isSensor, rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
             Point origin;
             origin.x = i*_tileSize.width/_ratio;
-            origin.y = (_tileSize.height*_mapSize.height-j*_tileSize.height)/_ratio;
-            createB2StaticRect(origin+rect.origin-Point(0,32), rect.size, kBoxGround);
-        }                  
+            origin.y = (_tileSize.height*(_mapSize.height-1)-j*_tileSize.height)/_ratio;
+            createB2StaticRect(origin+rect.origin+Point(16,0), rect.size, isSensor? kBoxSensor:kBoxGround);
+        }
     }
+    //add edgebox to avoid out of the map
+    //left
+    createB2StaticRect(Point(-_tileSize.width/2/_ratio, _tileSize.height*_mapSize.height/2/_ratio),
+                       Size(_tileSize.width/_ratio, _tileSize.height*_mapSize.height/_ratio), kBoxGround);
+    //right
+    createB2StaticRect(Point(_tileSize.width*_mapSize.width/_ratio+_tileSize.width/2/_ratio, _tileSize.height*_mapSize.height/2/_ratio),
+                       Size(_tileSize.width/_ratio, _tileSize.height*_mapSize.height/_ratio), kBoxGround);
+    //top
+    createB2StaticRect(Point(_tileSize.width*_mapSize.width/2/_ratio, (_tileSize.height*_mapSize.height+_tileSize.height/2)/_ratio),
+                       Size(_tileSize.width*_mapSize.width/_ratio, _tileSize.height/_ratio), kBoxGround);
+    //bottom
+    createB2StaticRect(Point(_tileSize.width*_mapSize.width/2/_ratio, -_tileSize.height/2/_ratio),
+                       Size(_tileSize.width*_mapSize.width/_ratio, _tileSize.height/_ratio), kBoxGround);
 }
 void HelloWorld::createB2StaticRect(Point pos, Size size, CollisionType type)
 {
@@ -117,15 +150,144 @@ void HelloWorld::createB2StaticRect(Point pos, Size size, CollisionType type)
     this->addChild(sp);
     for (auto shape:body->getShapes()) {
         shape->setContactTestBitmask(0x1);
-        shape->setRestitution(0.0);
+        shape->setRestitution(1.0);
         shape->setMass(0.0);
-        shape->setFriction(0.0);
+        shape->setFriction(0.00);
         if (type==kBoxSensor) {
             shape->setSensor(true);
         }
     }
 }
-HelloWorld::~HelloWorld()
+
+void HelloWorld::initHero()
 {
-    _map->release();
+    _hero = Sprite::create("hero_stand_01.png");
+    _hero->setPosition(Point(48, 54));
+    auto body = PhysicsBody::createBox(Size(25,50));//(Size(32, 64), PHYSICSBODY_MATERIAL_DEFAULT, 1);
+    _hero->setPhysicsBody(body);
+    this->addChild(_hero);
+    body->setRotationEnable(false);
+    for (auto shape:body->getShapes()) {
+        shape->setContactTestBitmask(0x1);
+        shape->setRestitution(0.0);
+        shape->setMass(0.0);
+        shape->setFriction(0.00);
+    }
+}
+
+void HelloWorld::onEnterTransitionDidFinish()
+{
+    listener = EventListenerTouchAllAtOnce::create();
+    listener->onTouchesBegan = CC_CALLBACK_2(HelloWorld::onTouchesBegan, this);
+    listener->onTouchesMoved = CC_CALLBACK_2(HelloWorld::onTouchesMoved, this);
+    listener->onTouchesEnded = CC_CALLBACK_2(HelloWorld::onTouchesEnded, this);
+    listener->onTouchesCancelled = CC_CALLBACK_2(HelloWorld::onTouchesCancelled, this);
+    auto dispatcher = Director::getInstance()->getEventDispatcher();
+    dispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+    
+    //keyboard
+    keyListener = EventListenerKeyboard::create();
+    keyListener->onKeyPressed = CC_CALLBACK_2(HelloWorld::onKeyPressed, this);
+    keyListener->onKeyReleased = CC_CALLBACK_2(HelloWorld::onKeyReleased, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(keyListener, this);
+    
+    this->scheduleUpdate();
+}
+
+void HelloWorld::update(float dt)
+{
+    if (_hero) {
+        this->setViewpointCenter(_hero->getPosition());
+    }
+}
+void HelloWorld::onExitTransitionDidStart()
+{
+    this->unscheduleUpdate();
+    Director::getInstance()->getEventDispatcher()->removeEventListener(listener);
+    Director::getInstance()->getEventDispatcher()->removeEventListener(keyListener);
+}
+     
+void HelloWorld::onTouchesBegan(const std::vector<Touch*>& touches, Event *event)
+{
+    
+}
+void HelloWorld::onTouchesMoved(const std::vector<Touch*>& touches, Event *event)
+{
+    
+}
+void HelloWorld::onTouchesEnded(const std::vector<Touch*>& touches, Event *event)
+{
+    
+}
+void HelloWorld::onTouchesCancelled(const std::vector<Touch*>& touches, Event *event)
+{
+    
+}
+     
+void HelloWorld::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_event)
+{
+    if (keyCode == EventKeyboard::KeyCode::KEY_A) {
+        log("left");
+        _hero->getPhysicsBody()->setVelocity(Vec2(-80.0,0));
+        //_hero->getPhysicsBody()->applyForce(Vec2(-30, 0));
+    } else if (keyCode == EventKeyboard::KeyCode::KEY_D) {
+        log("right");
+        _hero->getPhysicsBody()->setVelocity(Vec2(80.0,0));
+        //_hero->getPhysicsBody()->applyForce(Vect(30, 0));
+    } else if (keyCode == EventKeyboard::KeyCode::KEY_J) {
+        log("jump");
+        _hero->getPhysicsBody()->applyImpulse(Vect(0, 380));
+    } else if (keyCode == EventKeyboard::KeyCode::KEY_M) {
+        if (_showDebugDraw) _world->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
+        else _world->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+        _showDebugDraw=!_showDebugDraw;
+    }
+}
+void HelloWorld::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_event)
+{
+    if (keyCode == EventKeyboard::KeyCode::KEY_A) {
+        auto vec = _hero->getPhysicsBody()->getVelocity();
+        vec.x=0;
+        _hero->getPhysicsBody()->setVelocity(vec);
+    } else if (keyCode == EventKeyboard::KeyCode::KEY_D) {
+        auto vec = _hero->getPhysicsBody()->getVelocity();
+        vec.x=0;
+        _hero->getPhysicsBody()->setVelocity(vec);
+    }
+}
+
+void HelloWorld::setViewpointCenter(Point position)
+{
+    float mapWidth = _mapSize.width * _tileSize.width/_ratio;
+    float mapHeight = _mapSize.height * _tileSize.height/_ratio;
+    float offsetX = _tileSize.width*0;
+    float offsetY = _tileSize.height*0;
+    
+    //log("offset[%f,%f]", offsetX, offsetY);
+    //x
+    int x;
+    if(mapWidth < winSize.width) x=mapWidth/2;
+    else{
+        if(position.x > mapWidth-winSize.width/2+offsetX){
+            x = MIN(position.x, mapWidth-winSize.width/2+offsetX);
+        }else if(position.x < winSize.width/2-offsetX){
+            x = MAX(position.x, winSize.width/2-offsetX);
+        }else x=position.x;
+    }
+    
+    //y
+    int y;
+    if(mapHeight < winSize.height) y=mapHeight/2;
+    else{
+        if(position.y > mapHeight-winSize.height/2+offsetY){
+            y = MIN(position.y, mapHeight-winSize.height/2+offsetY);
+        }else if(position.y < winSize.height/2-offsetY){
+            y = MAX(position.y, winSize.height/2-offsetY);
+        }else y=position.y;
+    }
+    
+    Point actualPosition = Point(x, y);
+    Point centerOfView = Point(winSize.width/2, winSize.height/2);
+    Point viewPoint = centerOfView-actualPosition;
+    this->setPosition(viewPoint);
 }
