@@ -19,7 +19,11 @@ const std::string mapTypeStr[] = {
 const std::string shapeTypeStr[] = {
     "normal",
     "round",
-    "down"
+    "down",
+    "down_round",
+    "hero_stand",
+    "hero_squat",
+    "hero_hung"
 };
 
 const std::string heroStateStr[] = {
@@ -39,6 +43,9 @@ const bool isSensor[] = {
     false,
     true
 };
+
+#define LOGURU_IMPLEMENTATION
+#include <loguru.hpp>
 
 Scene* HelloWorld::createScene()
 {
@@ -70,6 +77,9 @@ bool HelloWorld::init()
     _key=0;
     winSize = Director::getInstance()->getVisibleSize();
     
+    loguru::add_file("~/testlog.txt", loguru::Truncate, loguru::Verbosity_INFO);
+    LOG_SCOPE_FUNCTION(INFO);
+    loguru::g_stderr_verbosity = 1;
     _ratio = Director::getInstance()->getContentScaleFactor();
     initMap();
     initHero();
@@ -121,38 +131,38 @@ void HelloWorld::initMap()
     _physicBlock=std::vector<Rect>(max);
     _physicBlockType.clear();
     _physicBlockType=std::vector<int>(max);
-    log("size of _physicBlock is %lu", _physicBlock.size());
+    LOG_F(INFO,"size of _physicBlock is %lu", _physicBlock.size());
     while (tile)
     {
         int gid;
         int id;
         float x,y,width,height;
         auto err = tile->QueryIntAttribute("id", &gid);
-        log("tile , query gid[%d]", gid);
+        //LOG_F(INFO,"tile , query gid[%d]", gid);
         auto obj_or_prop=tile->FirstChildElement();
         //bool isSensor;
         if (obj_or_prop->FirstChildElement() == nullptr) {
             tile=tile->NextSiblingElement();
             continue;
         }
-        log("first obj_or_prop[%s]", obj_or_prop->Name());
+        //LOG_F(INFO,"first obj_or_prop[%s]", obj_or_prop->Name());
         tinyxml2::XMLElement *tile_obj=nullptr;
         if (strcmp(obj_or_prop->Name(), "objectgroup")==0) {
             tile_obj=obj_or_prop->FirstChildElement();
             assert(tile_obj!=nullptr);
         } else {
             auto prop = obj_or_prop->FirstChildElement();
-            log("prop name[%s]", prop->Name());
+            //LOG_F(INFO,"prop name[%s]", prop->Name());
             int type=false;
             prop->QueryIntAttribute("value", &type);
-            log("gid[%d] type[%s]", gid, mapTypeStr[type].c_str());
+            //LOG_F(INFO,"gid[%d] type[%s]", gid, mapTypeStr[type].c_str());
             _physicBlockType[gid]=type;
             auto n = obj_or_prop->NextSiblingElement();
             if (n == nullptr) {
                 tile=tile->NextSiblingElement();
                 continue;
             }
-            log("n name[%s]", n->Name());
+            //LOG_F(INFO,"n name[%s]", n->Name());
             tile_obj=n->FirstChildElement();
             if (tile_obj == nullptr) {
                 tile=tile->NextSiblingElement();
@@ -170,10 +180,10 @@ void HelloWorld::initMap()
         assert(err == tinyxml2::XML_NO_ERROR);
         err = tile_obj->QueryFloatAttribute("height", &height);
         assert(err == tinyxml2::XML_NO_ERROR);
-        //log("ele gid[%d] id[%d],[%f, %f, %f, %f]", gid, id, x, y, width, height);
         //because center position is not 0,0, it is 0.5, 0.5
         _physicBlock[gid]=Rect(x/_ratio,(_tileSize.height-y-height/2)/_ratio,width/_ratio,height/_ratio);
-        log("ele gid[%d] id[%d],[%f, %f, %f, %f]", gid, id,
+        
+        LOG_F(2,"ele gid[%d] id[%d],[%f, %f, %f, %f]", gid, id,
             _physicBlock[gid].origin.x, _physicBlock[gid].origin.y,
             _physicBlock[gid].size.width, _physicBlock[gid].size.height);
         tile=tile->NextSiblingElement();
@@ -186,8 +196,8 @@ void HelloWorld::initMap()
     }
     this->addChild(_staticLayer);
     auto size = _map->getMapSize();
-    //log("Tile size[%f,%f]", size.width, size.height);
-    //log("size of _physicBlock is %lu", _physicBlock.size());
+    //LOG_F(INFO,"Tile size[%f,%f]", size.width, size.height);
+    //LOG_F(INFO,"size of _physicBlock is %lu", _physicBlock.size());
     for (int i=0; i<size.width; i++) {
         for (int j=0; j<size.height; j++) {
             if (_visited[i][j]==kMapVisit_YES) continue;
@@ -196,7 +206,7 @@ void HelloWorld::initMap()
             Rect rect = _physicBlock[gid];
             int type = _physicBlockType[gid];
             if (rect.origin==Point::ZERO && rect.size.width==0 && rect.size.height==0) {
-                log("skip (%d,%d)", i, j);
+                //LOG_F(INFO,"skip (%d,%d)", i, j);
                 _visited[i][j]=kMapVisit_YES;
                 continue;
             }
@@ -215,7 +225,7 @@ void HelloWorld::initMap()
                     else break;
                 }
                 /*
-                log("at (%d,%d) - gid[%d] type[%s] - right[%d] - rect[%f,%f,%f,%f]",
+                LOG_F(INFO,"at (%d,%d) - gid[%d] type[%s] - right[%d] - rect[%f,%f,%f,%f]",
                     i, j,
                     gid, mapTypeStr[type].c_str(),
                     right,
@@ -241,7 +251,7 @@ void HelloWorld::initMap()
                     else break;
                 }
                 /*
-                log("at (%d,%d) - gid[%d] type[%s] - right[%d] - rect[%f,%f,%f,%f]",
+                LOG_F(INFO,"at (%d,%d) - gid[%d] type[%s] - right[%d] - rect[%f,%f,%f,%f]",
                     i, j,
                     gid, mapTypeStr[type].c_str(),
                     down,
@@ -257,7 +267,7 @@ void HelloWorld::initMap()
             }
             _visited[i][j]=kMapVisit_YES;
             /*
-            log("at (%d,%d) - gid[%d] type[%s] - rect[%f,%f,%f,%f]",
+            LOG_F(INFO,"at (%d,%d) - gid[%d] type[%s] - rect[%f,%f,%f,%f]",
                 i, j,
                 gid, mapTypeStr[type].c_str(),
                 rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
@@ -297,10 +307,15 @@ void HelloWorld::createB2StaticRect(Point pos, Size size, int tag)
         body->addShape(roundshape);
         
         if (_physicBlockType[tag]==kMapType_hung) {
-            PhysicsShape *downshape=PhysicsShapeBox::create(Size(size.width, 8), PHYSICSBODY_MATERIAL_DEFAULT, Vec2(0, -60));
+            auto downshape=PhysicsShapeBox::create(Size(size.width, 4), PHYSICSBODY_MATERIAL_DEFAULT, Vec2(0, -60));
             downshape->setTag(kShapeTag_down);
             downshape->setSensor(true);
             body->addShape(downshape);
+            
+            auto downroundshape=PhysicsShapeBox::create(Size(size.width+2, 26), PHYSICSBODY_MATERIAL_DEFAULT, Vec2(0, -48));
+            downroundshape->setTag(kShapeTag_down_round);
+            downroundshape->setSensor(true);
+            body->addShape(downroundshape);
         }
     }
     this->addChild(sp);
@@ -368,6 +383,7 @@ void HelloWorld::onEnterTransitionDidFinish()
 
 bool HelloWorld::onContactBegin(const PhysicsContact &contact)
 {
+    //LOG_SCOPE_FUNCTION(INFO);
     auto shapeA = contact.getShapeA();
     auto shapeB = contact.getShapeB();
     auto bodyA = shapeA->getBody();
@@ -381,45 +397,64 @@ bool HelloWorld::onContactBegin(const PhysicsContact &contact)
     auto shapeTagA = shapeA->getTag();
     auto shapeTagB = shapeB->getTag();
     
-    log("contact begin gidA[%d] gidB[%d], shapeTagA[%s] shapeTagB[%s], blockTypeA[%s] blockTypeB[%s]"
-        "PositionA[%f,%f], PositionB[%f,%f]",
+    //skip hero sensor test, to limited verbose logs
+    if (gidA == HERO_GID && shapeA->isSensor()) return true;
+    if (gidB == HERO_GID && shapeB->isSensor()) return true;
+    log("contact begin gidA[%d] gidB[%d], shapeTagA[%s] shapeTagB[%s], blockTypeA[%s] blockTypeB[%s], "
+          "sensorA[%s] sensorB[%s], "
+          "PositionA[%f,%f], PositionB[%f,%f]",
         gidA, gidB,
         (gidA==-1)? "Hero":shapeTypeStr[shapeTagA].c_str(),
         (gidB==-1)? "Hero":shapeTypeStr[shapeTagB].c_str(),
         (gidA==-1)? "Hero":mapTypeStr[_physicBlockType[gidA]].c_str(),
         (gidB==-1)? "Hero":mapTypeStr[_physicBlockType[gidB]].c_str(),
+        shapeA->isSensor()? "true":"false",
+        shapeB->isSensor()? "true":"false",
         spA->getPosition().x, spA->getPosition().y,
         spB->getPosition().x, spB->getPosition().y);
     
     //hero colission with hung normal from up direction
     if (gidA == HERO_GID && (_physicBlockType[gidB]==kMapType_stage || _physicBlockType[gidB]==kMapType_hung)
-        && shapeTagB==kShapeTag_normal
+        && shapeTagB==kShapeTag_round
         && spA->getPosition().y-sizeA.height/2+8 > spB->getPosition().y) {
         bodyB->getShape(kShapeTag_normal)->setSensor(false);
+        _currentStandBody=bodyB;
     }
     if (gidB == HERO_GID && (_physicBlockType[gidA]==kMapType_stage || _physicBlockType[gidA]==kMapType_hung)
-        && shapeTagA==kShapeTag_normal
+        && shapeTagA==kShapeTag_round
         && spB->getPosition().y-sizeB.height/2+8 > spA->getPosition().y) {
+        _currentStandBody=bodyA;
         bodyA->getShape(kShapeTag_normal)->setSensor(false);
     }
     //try if need hung
     if (gidA == HERO_GID && _physicBlockType[gidB] == kMapType_hung
         && shapeTagB==kShapeTag_round
         && spA->getPosition().y < spB->getPosition().y) {
-        log("try hung A");
-        bodyB->getShape(kShapeTag_down)->setSensor(false);
+        if (_state != kHeroState_hung) {
+            LOG_F(INFO,"try hung A");
+            bodyB->getShape(kShapeTag_down)->setSensor(false);
+            bodyB->getShape(kShapeTag_normal)->setSensor(false);
+            _currentStandBody=bodyB;
+            changeHeroState(kHeroState_hung);
+        }
     }
     if (gidB == HERO_GID && _physicBlockType[gidA] == kMapType_hung
         && shapeTagA==kShapeTag_round
-        && spA->getPosition().y < spB->getPosition().y) {
-        log("try hung B");
-        bodyA->getShape(kShapeTag_down)->setSensor(false);
+        && spA->getPosition().y > spB->getPosition().y) {
+        if (_state != kHeroState_hung) {
+            LOG_F(INFO,"try hung B");
+            bodyA->getShape(kShapeTag_down)->setSensor(false);
+            bodyB->getShape(kShapeTag_normal)->setSensor(false);
+            _currentStandBody=bodyA;
+            changeHeroState(kHeroState_hung);
+        }
     }
     return true;
 }
 
 bool HelloWorld::onContactSeparate(const PhysicsContact &contact)
 {
+    //LOG_SCOPE_FUNCTION(INFO);
     auto shapeA = contact.getShapeA();
     auto shapeB = contact.getShapeB();
     auto bodyA = shapeA->getBody();
@@ -433,13 +468,18 @@ bool HelloWorld::onContactSeparate(const PhysicsContact &contact)
     auto shapeTagA = shapeA->getTag();
     auto shapeTagB = shapeB->getTag();
     
+    if (gidA == HERO_GID && shapeA->isSensor()) return true;
+    if (gidB == HERO_GID && shapeB->isSensor()) return true;
     log("contact seperate gidA[%d] gidB[%d], shapeTagA[%s] shapeTagB[%s], blockTypeA[%s] blockTypeB[%s], "
-        "PositionA[%f,%f], PositionB[%f,%f]",
+          "sensorA[%s] sensorB[%s], "
+          "PositionA[%f,%f], PositionB[%f,%f]",
         gidA, gidB,
         (gidA==-1)? "Hero":shapeTypeStr[shapeTagA].c_str(),
         (gidB==-1)? "Hero":shapeTypeStr[shapeTagB].c_str(),
         (gidA==-1)? "Hero":mapTypeStr[_physicBlockType[gidA]].c_str(),
         (gidB==-1)? "Hero":mapTypeStr[_physicBlockType[gidB]].c_str(),
+        shapeA->isSensor()? "true":"false",
+        shapeB->isSensor()? "true":"false",
         spA->getPosition().x, spA->getPosition().y,
         spB->getPosition().x, spB->getPosition().y);
     
@@ -455,6 +495,23 @@ bool HelloWorld::onContactSeparate(const PhysicsContact &contact)
         && shapeTagA==kShapeTag_round
         && shapeA->isSensor()) {
         bodyA->getShape(kShapeTag_normal)->setSensor(true);
+    }
+    //leave hung
+    if (_state==kHeroState_hung) {
+        if (gidA==HERO_GID && !shapeA->isSensor()
+            && shapeB==_currentStandBody->getShape(kShapeTag_down_round)
+            && shapeTagB==kShapeTag_down_round) {
+            LOG_F(INFO, "seperate hung");
+            bodyB->getShape(kShapeTag_down)->setSensor(true);
+            changeHeroState(kHeroState_stand);
+        }
+        if (gidB==HERO_GID && !shapeA->isSensor()
+            && shapeA==_currentStandBody->getShape(kShapeTag_down_round)
+            && shapeTagA==kShapeTag_down_round) {
+            LOG_F(INFO, "seperate hung");
+            bodyA->getShape(kShapeTag_down)->setSensor(true);
+            changeHeroState(kHeroState_stand);
+        }
     }
     return true;
 }
@@ -492,17 +549,17 @@ void HelloWorld::onTouchesCancelled(const std::vector<Touch*>& touches, Event *e
 void HelloWorld::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_event)
 {
     if (keyCode == EventKeyboard::KeyCode::KEY_A) {
-        log("left");
+        LOG_F(INFO,"left");
         _key |= BUTTON_L;
         _hero->getPhysicsBody()->setVelocity(Vec2(-80.0,0));
         _hero->getPhysicsBody()->applyForce(Vec2(-80, 0));
     } else if (keyCode == EventKeyboard::KeyCode::KEY_D) {
-        log("right");
+        LOG_F(INFO,"right");
         _key |= BUTTON_R;
         _hero->getPhysicsBody()->setVelocity(Vec2(80.0,0));
         _hero->getPhysicsBody()->applyForce(Vect(80, 0));
     } else if (keyCode == EventKeyboard::KeyCode::KEY_J) {
-        log("jump");
+        LOG_F(INFO,"jump");
         _key |= BUTTON_A;
         _hero->getPhysicsBody()->applyImpulse(Vect(0, 380));
     } else if (keyCode == EventKeyboard::KeyCode::KEY_M) {
@@ -511,17 +568,41 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_even
         _showDebugDraw=!_showDebugDraw;
     } else if (keyCode == EventKeyboard::KeyCode::KEY_W) {
         _key |= BUTTON_U;
-        changeHeroState(kHeroState_stand);
+        if (_state == kHeroState_hung) {
+            _hero->getPhysicsBody()->applyImpulse(Vect(0, 380));
+        } else {
+            changeHeroState(kHeroState_stand);
+        }
     } else if (keyCode == EventKeyboard::KeyCode::KEY_S) {
         _key |= BUTTON_D;
-        log("down");
-        changeHeroState(kHeroState_squat);
+        LOG_F(INFO,"down");
+        if (_state == kHeroState_hung) {
+            LOG_F(INFO, "exit hung and stand");
+            _currentStandBody->getShape(kShapeTag_down)->setSensor(true);
+            _currentStandBody=nullptr;
+            changeHeroState(kHeroState_stand);
+        } else if (_state == kHeroState_squat) {
+            auto gid = _currentStandBody->getNode()->getTag();
+            LOG_F(INFO, "exit from squat gid[%d]", gid);
+            if (_physicBlockType[gid]==kMapType_stage) {
+                LOG_F(INFO, "real exit from squat, down and standup");
+                _currentStandBody->getShape(kShapeTag_normal)->setSensor(true);
+                changeHeroState(kHeroState_stand);
+            } else if (_physicBlockType[gid]==kMapType_hung) {
+                LOG_F(INFO, "real exit from squat, down and hung");
+                _currentStandBody->getShape(kShapeTag_normal)->setSensor(true);
+                _currentStandBody->getShape(kShapeTag_down)->setSensor(false);
+                changeHeroState(kHeroState_hung);
+            }
+        } else {       
+            changeHeroState(kHeroState_squat);
+        }
     } else if (keyCode == EventKeyboard::KeyCode::KEY_J) {
         _key |= BUTTON_A;
     } else if (keyCode == EventKeyboard::KeyCode::KEY_K) {
         _key |= BUTTON_B;
     }
-    log("press key[0x%x]", _key);
+    //LOG_F(INFO,"press key[0x%x]", _key);
 }
 void HelloWorld::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_event)
 {
@@ -546,7 +627,7 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_eve
     } else if (keyCode == EventKeyboard::KeyCode::KEY_K) {
         _key &= ~BUTTON_B;
     }
-    log("release key[0x%x]", _key);
+    //LOG_F(INFO,"release key[0x%x]", _key);
 }
 
 void HelloWorld::setViewpointCenter(Point position)
@@ -556,7 +637,7 @@ void HelloWorld::setViewpointCenter(Point position)
     float offsetX = _tileSize.width*0;
     float offsetY = _tileSize.height*0;
     
-    //log("offset[%f,%f]", offsetX, offsetY);
+    //LOG_F(INFO,"offset[%f,%f]", offsetX, offsetY);
     //x
     int x;
     if(mapWidth < winSize.width) x=mapWidth/2;
@@ -587,10 +668,11 @@ void HelloWorld::setViewpointCenter(Point position)
 
 void HelloWorld::changeHeroState(kHeroState state)
 {
+    LOG_F(INFO,"try change hero state from[%s] --> [%s]", heroStateStr[_state].c_str(), heroStateStr[state].c_str());
     if (_state == state) return;
-    log("change hero state from[%s] --> [%s]", heroStateStr[_state].c_str(), heroStateStr[state].c_str());
+    LOG_F(INFO,"ok change hero state from[%s] --> [%s]", heroStateStr[_state].c_str(), heroStateStr[state].c_str());
     _state=state;
-    if (_state==kHeroState_stand) {
+    if (_state==kHeroState_stand || _state==kHeroState_hung) {
         _hero->getPhysicsBody()->getShape(kShapeTag_hero_stand)->setSensor(false);
         _hero->getPhysicsBody()->getShape(kShapeTag_hero_squat)->setSensor(true);
     } else if (_state==kHeroState_squat) {

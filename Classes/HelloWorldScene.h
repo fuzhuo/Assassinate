@@ -22,6 +22,7 @@ typedef enum{
     kShapeTag_normal=0,
     kShapeTag_round,
     kShapeTag_down,
+    kShapeTag_down_round,
     kShapeTag_hero_stand,
     kShapeTag_hero_squat,
     kShapeTag_hero_hung
@@ -61,14 +62,14 @@ public:
     virtual void onEnterTransitionDidFinish();
     virtual void onExitTransitionDidStart();
     //touch
-    virtual void onTouchesBegan(const std::vector<Touch*>& touches, Event *event);
-    virtual void onTouchesMoved(const std::vector<Touch*>& touches, Event *event);
-    virtual void onTouchesEnded(const std::vector<Touch*>& touches, Event *event);
-    virtual void onTouchesCancelled(const std::vector<Touch*>& touches, Event *event);
+    void onTouchesBegan(const std::vector<Touch*>& touches, Event *event);
+    void onTouchesMoved(const std::vector<Touch*>& touches, Event *event);
+    void onTouchesEnded(const std::vector<Touch*>& touches, Event *event);
+    void onTouchesCancelled(const std::vector<Touch*>& touches, Event *event);
     
     //keyboard
-    virtual void onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_event);
-    virtual void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_event);
+    void onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_event);
+    void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_event);
     EventListenerTouchAllAtOnce *listener;
     EventListenerKeyboard *keyListener;
     
@@ -97,6 +98,7 @@ private:
     unsigned int _key;
     void changeHeroState(kHeroState state);
     kHeroState _state;
+    PhysicsBody *_currentStandBody;
 };
 
 #endif // __HELLOWORLD_SCENE_H__
