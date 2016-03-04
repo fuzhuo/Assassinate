@@ -26,7 +26,7 @@
     <property name="type" value="2"/>
    </properties>
    <objectgroup draworder="index">
-    <object id="0" x="0" y="0" width="64" height="16"/>
+    <object id="0" x="0" y="0" width="64" height="6"/>
    </objectgroup>
   </tile>
   <tile id="6">
@@ -34,7 +34,7 @@
     <property name="type" value="2"/>
    </properties>
    <objectgroup draworder="index">
-    <object id="0" x="0" y="0" width="64" height="14"/>
+    <object id="0" x="0" y="0" width="64" height="6"/>
    </objectgroup>
   </tile>
   <tile id="7">
@@ -104,7 +104,7 @@
     <property name="type" value="0"/>
    </properties>
    <objectgroup draworder="index">
-    <object id="0" x="0" y="15" width="64" height="49"/>
+    <object id="0" x="0" y="18" width="64" height="52"/>
    </objectgroup>
   </tile>
   <tile id="17">
@@ -150,7 +150,7 @@
  </tileset>
  <layer name="StaticLayer" width="28" height="15">
   <data encoding="base64" compression="zlib">
-   eJy9k0kOgCAMRdGFs4KgK73/Oe0Ckh8iFQRdvBDadPgtGCGEATrvHuvjeJvzi3qSGIjRY3pZT9m4PuDXP+urCtdTEKcCOUvOM+dNyAL7Qy0pGrg9p+rDHrg9+3OfrN1/i9z+YmcW6vnOjjlD/wJpiJbZyZMd/TFaZmLJ0Idw+txf3Ij9B32u14M4E/TVDCuDvLFpe3YJMcgF7j0bbA==
+   eJy9k0kOgCAMRdGF4giirvT+57QLSBoCX1B08UJo0+HTsgohVob07qk+xNOcX9RTRE8MHuPDetrGdRG/+VlfVbieZnE6khO9Z8jnKL0TqsD8eL85O4HmnKuP94Dm7O+cjtjR/FLfLNZzyM5zOi0od0O0YCZ3du5P0TIR8wt9qbi/uBH7D/pcrwdxZuirAQtABWzGnjIjhnMBS3kbUQ==
   </data>
  </layer>
 </map>

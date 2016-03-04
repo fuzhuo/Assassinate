@@ -3,49 +3,12 @@
 
 #include "cocos2d.h"
 #define STATIC_LAYER "StaticLayer"
+#include "Hero.hpp"
+#include "common.h"
 
-typedef enum {
-    kMapType_ground,
-    kMapType_wall,
-    kMapType_hung,
-    kMapType_stage,
-    kMapType_empty,
-    kMapType_harm
-}CollisionType;
-
-typedef enum{
-    kMapVisit_NO=0,
-    kMapVisit_YES
-}kMapVisit;
-
-typedef enum{
-    kShapeTag_normal=0,
-    kShapeTag_round,
-    kShapeTag_down,
-    kShapeTag_down_round,
-    kShapeTag_hero_stand,
-    kShapeTag_hero_squat,
-    kShapeTag_hero_hung
-}kShapeTag;
-
-typedef enum{
-    kHeroState_stand,
-    kHeroState_hung,
-    kHeroState_squat
-}kHeroState;
-
-typedef enum{
-    BUTTON_U=1<<0,
-    BUTTON_D=1<<1,
-    BUTTON_L=1<<2,
-    BUTTON_R=1<<3,
-    BUTTON_A=1<<4,
-    BUTTON_B=1<<5
-}kButton;
-
-#define HERO_GID -1
 USING_NS_CC;
-class HelloWorld : public cocos2d::Layer
+
+class Playground : public cocos2d::Layer
 {
 public:
     // there's no 'id' in cpp, so we recommend returning the class instance pointer
@@ -55,8 +18,8 @@ public:
     virtual bool init();
 
     // implement the "static create()" method manually
-    CREATE_FUNC(HelloWorld);
-    ~HelloWorld();
+    CREATE_FUNC(Playground);
+    ~Playground();
 public:
     //input
     virtual void onEnterTransitionDidFinish();
@@ -91,13 +54,12 @@ private:
     int **_visited;
     
     void initHero();
-    Sprite *_hero;
+    Sprite *_heroSprite;
+    Hero *_hero;
     bool _showDebugDraw;
     void setViewpointCenter(Point position);
     void update(float dt);
     unsigned int _key;
-    void changeHeroState(kHeroState state);
-    kHeroState _state;
     PhysicsBody *_currentStandBody;
 };
 
