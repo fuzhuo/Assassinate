@@ -64,15 +64,15 @@ void Hero::changeHeroState(kHeroState state)
     if (_state==kHeroState_stand) {
         mSprite->getPhysicsBody()->getShape(kShapeTag_hero_stand)->setSensor(false);
         mSprite->getPhysicsBody()->getShape(kShapeTag_hero_squat)->setSensor(true);
-        mSprite->getPhysicsBody()->getShape(kShapeTag_hero_hung_box)->setSensor(true);
+        //mSprite->getPhysicsBody()->getShape(kShapeTag_hero_hung_box)->setSensor(true);
     }else if (_state==kHeroState_hung) {
-        mSprite->getPhysicsBody()->getShape(kShapeTag_hero_hung_box)->setSensor(false);
-        mSprite->getPhysicsBody()->getShape(kShapeTag_hero_stand)->setSensor(true);
+        //mSprite->getPhysicsBody()->getShape(kShapeTag_hero_hung_box)->setSensor(false);
+        mSprite->getPhysicsBody()->getShape(kShapeTag_hero_stand)->setSensor(false);
         mSprite->getPhysicsBody()->getShape(kShapeTag_hero_squat)->setSensor(true);
     } else if (_state==kHeroState_squat) {
         mSprite->getPhysicsBody()->getShape(kShapeTag_hero_squat)->setSensor(false);
         mSprite->getPhysicsBody()->getShape(kShapeTag_hero_stand)->setSensor(true);
-        mSprite->getPhysicsBody()->getShape(kShapeTag_hero_hung_box)->setSensor(true);
+        //mSprite->getPhysicsBody()->getShape(kShapeTag_hero_hung_box)->setSensor(true);
     }
     if (_state==kHeroState_hung) {
         mSprite->setTexture(Director::getInstance()->getTextureCache()->getTextureForKey("hero_hung_01.png"));

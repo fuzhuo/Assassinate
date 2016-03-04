@@ -265,7 +265,9 @@ void Playground::createB2StaticRect(Point pos, Size size, int tag)
     sp->setPosition(pos);
     sp->setPhysicsBody(body);
     if (_physicBlockType[tag]==kMapType_stage || _physicBlockType[tag]==kMapType_hung) {
-        PhysicsShape *roundshape=PhysicsShapeBox::create(Size(size.width+10, size.height+16));
+        PhysicsShape *roundshape=PhysicsShapeBox::create(Size(size.width+10, size.height+14),
+                                                         PHYSICSSHAPE_MATERIAL_DEFAULT,
+                                                         Vec2(0,0));
         roundshape->setTag(kShapeTag_round);
         roundshape->setSensor(true);
         body->addShape(roundshape);
@@ -353,10 +355,12 @@ bool Playground::onContactBegin(const PhysicsContact &contact)
     if (gidA == HERO_GID
         && _physicBlockType[gidB]==kMapType_ground) {
         _currentStandBody=bodyB;
+        return true;
     }
     if (gidB == HERO_GID
         && _physicBlockType[gidA]==kMapType_ground) {
         _currentStandBody=bodyA;
+        return true;
     }
     
     //hero colission with hung normal from up direction
@@ -366,6 +370,7 @@ bool Playground::onContactBegin(const PhysicsContact &contact)
         LOG_F(INFO, "up contact round, set normal not sensor");
         bodyB->getShape(kShapeTag_normal)->setSensor(false);
         _currentStandBody=bodyB;
+        return true;
     }
     if (gidB == HERO_GID && (_physicBlockType[gidA]==kMapType_stage || _physicBlockType[gidA]==kMapType_hung)
         && shapeTagA==kShapeTag_round
@@ -373,6 +378,36 @@ bool Playground::onContactBegin(const PhysicsContact &contact)
         LOG_F(INFO, "up contact round, set normal not sensor");
         _currentStandBody=bodyA;
         bodyA->getShape(kShapeTag_normal)->setSensor(false);
+        return true;
+    }
+    //do hung
+    if (_hero->getState() != kHeroState_hung
+        && gidA == HERO_GID
+        && _physicBlockType[gidB]==kMapType_hung
+        && shapeTagB==kShapeTag_normal
+        && shapeTagA==kShapeTag_hero_stand
+        && bodyB->getShape(kShapeTag_normal)->isSensor()
+        && spA->getPosition().y < spB->getPosition().y) {
+        LOG_F(INFO, "contact and hung A");
+        _hero->changeHeroState(kHeroState_hung);
+        bodyB->getShape(kShapeTag_normal)->setSensor(false);
+        bodyA->getShape(kShapeTag_hero_hung_box)->setSensor(false);
+        _currentStandBody=bodyB;
+        return true;
+    }
+    if (_hero->getState() != kHeroState_hung
+        && gidB == HERO_GID
+        && _physicBlockType[gidA]==kMapType_hung
+        && shapeTagA==kShapeTag_normal
+        && shapeTagB==kShapeTag_hero_stand
+        && bodyA->getShape(kShapeTag_normal)->isSensor()
+        && spB->getPosition().y < spA->getPosition().y) {
+        LOG_F(INFO, "contact and hung B");
+        _hero->changeHeroState(kHeroState_hung);
+        bodyA->getShape(kShapeTag_normal)->setSensor(false);
+        bodyB->getShape(kShapeTag_hero_hung_box)->setSensor(false);
+        _currentStandBody=bodyA;
+        return true;
     }
     //try if need hung
     /*
@@ -556,6 +591,7 @@ void Playground::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_even
     } else if (keyCode == EventKeyboard::KeyCode::KEY_W) {
         _key |= BUTTON_U;
         if (_hero->getState() == kHeroState_hung) {
+            _currentStandBody->getShape(kShapeTag_normal)->setSensor(true);
             _heroSprite->getPhysicsBody()->applyImpulse(Vect(0, 380));
         } else {
             _hero->changeHeroState(kHeroState_stand);
@@ -590,7 +626,7 @@ void Playground::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* unused_even
         if (_hero->getState() == kHeroState_hung) {
             LOG_F(INFO, "jump from hung");
             _currentStandBody->getShape(kShapeTag_normal)->setSensor(true);
-            _heroSprite->getPhysicsBody()->applyImpulse(Vect(0, 400));
+            _heroSprite->getPhysicsBody()->applyImpulse(Vect(0, 360));
         } else if (_hero->getState() != kHeroState_squat) {
             LOG_F(INFO, "jump from none squat");
             _heroSprite->getPhysicsBody()->applyImpulse(Vect(0, 400));
